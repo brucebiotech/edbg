@@ -119,6 +119,7 @@ enum {
 	 *  |********|
 	 *
 	 *		Status     = 0 | 1
+	 *                 0 means off, 1 means on
 	 *
 	 */
 	ID_DAP_VENDOR_EX_TARGET_POWER_STATUS = 0xa5,
