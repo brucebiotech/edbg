@@ -35,6 +35,55 @@ enum
   ID_DAP_JTAG_IDCODE        = 0x16,
 };
 
+enum {
+	/*
+	 *  ID_DAP_VENDOR_EX_SELECT_SWD_PORT
+	 *  ================================
+	 *  Selected a swd port as the currently active port.
+	 *
+	 *  | BYTE   | BYTE   |
+	 *  > 0xa0   | Number |
+	 *  |********|********|
+	 *
+	 *    Number     = The port number to set as the currently active
+	 *                 swd port. It must be within the attached dbu's supported 
+	 *                 port range
+	 *
+	 *  response
+	 *
+	 *  |        |
+	 *  | BYTE   |
+	 *  < Status |
+	 *  |********|
+	 *
+	 *		Status     = DAP_OK | DAP_ERROR
+	 *
+	 *
+	 */
+	ID_DAP_VENDOR_EX_SELECT_SWD_PORT   = 0xa0,
+	/*
+	 *  ID_DAP_VENDOR_EX_SELECTED_SWD_PORT 
+	 *  ==================================
+	 *  Get id of currently selected pins.
+	 *
+	 *  | BYTE   |
+	 *  > 0xa1   |
+	 *  |********|
+	 *
+	 *  response
+	 *
+	 *  |        |        |
+	 *  | BYTE   | BYTE   |
+	 *  < Status | Number |
+	 *  |********|********|
+	 *
+	 *		Status     = 1
+	 *    Number     = The number of the currently selected SWD port.
+	 *
+	 */
+	ID_DAP_VENDOR_EX_SELECTED_SWD_PORT = 0xa1,
+};
+
 enum
 {
   DAP_TRANSFER_APnDP        = 1 << 0,
@@ -232,10 +281,41 @@ static int dap_jtag_request_count = 0;
 static uint8_t dap_jtag_response_buf[JTAG_RESPONSE_BUF_SIZE];
 static int dap_jtag_response_count = 0;
 
+/*- Added vendor extensiions-------------------------------------------------*/
+
+uint8_t
+dap_vendor_extension_get_selected_swd_port (void) {
+  uint8_t buf[3] = {
+	 ID_DAP_VENDOR_EX_SELECTED_SWD_PORT,
+	 7
+  };
+  
+//  dbg_dap_cmd (uint8_t *data, int resp_size, int req_size)
+  
+  dbg_dap_cmd (buf,3,1);
+
+  check(1 == buf[0], "SELECTED_SWD_PORT failed");
+  
+  return buf[1];
+}
+
+void
+dap_vendor_extension_set_selected_swd_port (uint8_t number) {
+  uint8_t buf[] = {
+	 ID_DAP_VENDOR_EX_SELECT_SWD_PORT,
+	 number
+  };
+
+  dbg_dap_cmd (buf,sizeof(buf),sizeof(buf));
+
+  check(DAP_OK == buf[0], "SELECT_SWD_PORT failed");
+}
+
+
 /*- Implementations ---------------------------------------------------------*/
 
 //-----------------------------------------------------------------------------
-void dap_set_dp_version(int version)
+void dap_set_dp_version (int version)
 {
   dap_dp_version = version;
 }

@@ -269,7 +269,7 @@ static void target_select(target_options_t *options)
   dsu_did = dap_read_word(DSU_DID);
   id = dsu_did & DEVICE_ID_MASK;
   rev = (dsu_did >> DEVICE_REV_SHIFT) & DEVICE_REV_MASK;
-
+  
   for (int i = 0; i < ARRAY_SIZE(devices); i++)
   {
     if (devices[i].dsu_did != id)

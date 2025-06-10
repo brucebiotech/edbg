@@ -24,6 +24,10 @@ typedef struct
   int32_t      size;
   char         *fuse_cmd;
 
+  // for extensions
+  int32_t      set_port;
+  bool         get_port;
+  
   // For target use only
   int          file_size;
   uint8_t      *file_data;

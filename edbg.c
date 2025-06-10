@@ -50,10 +50,15 @@ static const struct option long_options[] =
   { "offset",    required_argument,  0, 'o' },
   { "size",      required_argument,  0, 'z' },
   { "fuse",      required_argument,  0, 'F' },
+
+  /* for extended vendor commands */
+  { "set",      required_argument,  0, 'm' },	// set port
+  { "get",      no_argument,        0, 'n' },	// get port
+
   { 0, 0, 0, 0 }
 };
 
-static const char *short_options = "hbd:x:epvkurf:t:ls:c:o:z:F:";
+static const char *short_options = "hbd:x:epvkurf:t:ls:c:o:z:F:m:n";
 
 /*- Variables ---------------------------------------------------------------*/
 static char *g_serial = NULL;
@@ -77,6 +82,10 @@ static target_options_t g_target_options =
   .offset       = -1,
   .size         = -1,
   .fuse_cmd     = NULL,
+  
+  // ex
+  .set_port     = -1,
+  .get_port     = false,
 };
 
 /*- Implementations ---------------------------------------------------------*/
@@ -389,6 +398,9 @@ static void print_help(char *name)
       "  -c, --clock <freq>         interface clock frequency in kHz (default 16000)\n"
       "  -o, --offset <offset>      offset for the operation\n"
       "  -z, --size <size>          size for the operation\n"
+	// ex
+      "  -m, --set <number>         set active swd port\n"
+      "  -n, --get                  get active swd port\n"
       "  -F, --fuse <options>       operations on the fuses (use '-F help' for details)\n"
     );
   }
@@ -458,6 +470,10 @@ static void parse_command_line(int argc, char **argv)
       case 'o': g_target_options.offset = (uint32_t)strtoul(optarg, NULL, 0); break;
       case 'z': g_target_options.size = (uint32_t)strtoul(optarg, NULL, 0); break;
       case 'F': g_target_options.fuse_cmd = optarg; break;
+		
+		case 'm': g_target_options.set_port = strtoul(optarg, NULL, 0); break;
+		case 'n': g_target_options.get_port = true; break;
+		
       default: exit(1); break;
     }
   }
@@ -482,7 +498,8 @@ int main(int argc, char **argv)
 
   parse_command_line(argc, argv);
 
-  active_actions = g_target_options.unlock || g_target_options.erase ||
+  
+  active_actions = g_target_options.get_port || g_target_options.unlock || g_target_options.erase ||
       g_target_options.program || g_target_options.verify || g_target_options.lock ||
       g_target_options.read || g_target_options.fuse_cmd;
 
@@ -515,16 +532,19 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  if (NULL == g_target)
-    error_exit("no target type specified (use '-t' option)");
-
-  if (0 == strcmp(g_target, "list"))
-  {
-    target_list();
-    return 0;
+  if (NULL == g_target) {
+	 if (!(g_target_options.get_port || g_target_options.set_port)) {
+		error_exit("no target type specified (use '-t' option)");
+	 }
+  } else {
+    if (0 == strcmp(g_target, "list"))
+    {
+      target_list();
+     return 0;
+    }
   }
-
-  target_ops = target_get_ops(g_target);
+  
+//  target_ops = target_get_ops(g_target);
 
   if (g_serial)
   {
@@ -580,6 +600,20 @@ int main(int argc, char **argv)
 
   reconnect_debugger();
 
+
+  if (g_target_options.get_port) {
+    uint8_t port_number = dap_vendor_extension_get_selected_swd_port ();
+	 message("current port is %u\n",port_number);
+    disconnect_debugger();
+    return 0;
+  }
+
+  if (g_target_options.set_port >= 0) {
+    dap_vendor_extension_set_selected_swd_port (g_target_options.set_port);
+    disconnect_debugger();
+    return 0;
+ }
+  
   if (g_target_options.reset > 0)
   {
     verbose("Resetting...");
@@ -595,6 +629,8 @@ int main(int argc, char **argv)
     disconnect_debugger();
     return 0;
   }
+
+  target_ops = target_get_ops(g_target);
 
   target_ops->select(&g_target_options);
 

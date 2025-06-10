@@ -104,5 +104,10 @@ void dap_jtag_write_dr(uint8_t *data, int size);
 void dap_jtag_read_dr(uint8_t *data, int size);
 int dap_jtag_scan_chain(uint32_t *idcode, int size);
 
+
+// ex
+uint8_t dap_vendor_extension_get_selected_swd_port (void);
+void dap_vendor_extension_set_selected_swd_port (uint8_t);
+
 #endif // _DAP_H_
 
