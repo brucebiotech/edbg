@@ -82,6 +82,47 @@ enum {
 	 *
 	 */
 	ID_DAP_VENDOR_EX_SELECTED_SWD_PORT = 0xa1,
+	/*
+	 *  ID_DAP_VENDOR_EX_TARGET_POWER 
+	 *  ==================================
+	 *  Switch the target-power output 
+	 *
+	 *  | BYTE   |
+	 *  > 0xa4   |
+	 *  |********|
+	 *
+	 *  response
+	 *
+	 *  |        |
+	 *  | BYTE   |
+	 *  < Status |
+	 *  |********|
+	 *
+	 *		Status     = DAP_OK | DAP_ERROR
+	 *
+	 */
+	ID_DAP_VENDOR_EX_TARGET_POWER	= 0xa4,
+	/*
+	 *  ID_DAP_VENDOR_EX_TARGET_POWER_STATUS 
+	 *  ====================================
+	 *  Switch the target-power output 
+	 *
+	 *  | BYTE   |
+	 *  > 0xa5   |
+	 *  |********|
+	 *
+	 *  response
+	 *
+	 *  |        |
+	 *  | BYTE   |
+	 *  < Status |
+	 *  |********|
+	 *
+	 *		Status     = 0 | 1
+	 *
+	 */
+	ID_DAP_VENDOR_EX_TARGET_POWER_STATUS = 0xa5,
+
 };
 
 enum
@@ -289,9 +330,7 @@ dap_vendor_extension_get_selected_swd_port (void) {
 	 ID_DAP_VENDOR_EX_SELECTED_SWD_PORT,
 	 7
   };
-  
-//  dbg_dap_cmd (uint8_t *data, int resp_size, int req_size)
-  
+    
   dbg_dap_cmd (buf,3,1);
 
   check(1 == buf[0], "SELECTED_SWD_PORT failed");
@@ -309,6 +348,29 @@ dap_vendor_extension_set_selected_swd_port (uint8_t number) {
   dbg_dap_cmd (buf,sizeof(buf),sizeof(buf));
 
   check(DAP_OK == buf[0], "SELECT_SWD_PORT failed");
+}
+
+void
+dap_vendor_extension_target_power_action (bool action) {
+  uint8_t buf[] = {
+	 ID_DAP_VENDOR_EX_TARGET_POWER,
+	 action
+  };
+
+  dbg_dap_cmd (buf,sizeof(buf),sizeof(buf));
+
+  check(DAP_OK == buf[0], "TARGET_POWER failed");
+}
+
+uint8_t
+dap_vendor_extension_target_power_status (void) {
+  uint8_t buf[3] = {
+	 ID_DAP_VENDOR_EX_TARGET_POWER_STATUS
+  };
+    
+  dbg_dap_cmd (buf,3,1);
+
+  return buf[0];
 }
 
 

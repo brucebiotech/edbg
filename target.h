@@ -27,6 +27,7 @@ typedef struct
   // for extensions
   int32_t      set_port;
   bool         get_port;
+  char         *power;
   
   // For target use only
   int          file_size;

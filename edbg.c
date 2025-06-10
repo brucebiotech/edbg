@@ -54,11 +54,12 @@ static const struct option long_options[] =
   /* for extended vendor commands */
   { "set",      required_argument,  0, 'm' },	// set port
   { "get",      no_argument,        0, 'n' },	// get port
+  { "power",    required_argument,  0, 'a' },	// get/set target power status
 
   { 0, 0, 0, 0 }
 };
 
-static const char *short_options = "hbd:x:epvkurf:t:ls:c:o:z:F:m:n";
+static const char *short_options = "hbd:x:epvkurf:t:ls:c:o:z:F:m:na:";
 
 /*- Variables ---------------------------------------------------------------*/
 static char *g_serial = NULL;
@@ -86,6 +87,7 @@ static target_options_t g_target_options =
   // ex
   .set_port     = -1,
   .get_port     = false,
+  .power        = NULL,
 };
 
 /*- Implementations ---------------------------------------------------------*/
@@ -399,6 +401,7 @@ static void print_help(char *name)
       "  -o, --offset <offset>      offset for the operation\n"
       "  -z, --size <size>          size for the operation\n"
 	// ex
+      "  -a, --power on|off|status  get/set the dbu target power status\n"
       "  -m, --set <number>         set active swd port\n"
       "  -n, --get                  get active swd port\n"
       "  -F, --fuse <options>       operations on the fuses (use '-F help' for details)\n"
@@ -473,6 +476,7 @@ static void parse_command_line(int argc, char **argv)
 		
 		case 'm': g_target_options.set_port = strtoul(optarg, NULL, 0); break;
 		case 'n': g_target_options.get_port = true; break;
+		case 'a': g_target_options.power = optarg; break;
 		
       default: exit(1); break;
     }
@@ -544,8 +548,6 @@ int main(int argc, char **argv)
     }
   }
   
-//  target_ops = target_get_ops(g_target);
-
   if (g_serial)
   {
     char *end = NULL;
@@ -600,7 +602,6 @@ int main(int argc, char **argv)
 
   reconnect_debugger();
 
-
   if (g_target_options.get_port) {
     uint8_t port_number = dap_vendor_extension_get_selected_swd_port ();
 	 message("current port is %u\n",port_number);
@@ -612,8 +613,23 @@ int main(int argc, char **argv)
     dap_vendor_extension_set_selected_swd_port (g_target_options.set_port);
     disconnect_debugger();
     return 0;
- }
-  
+  }
+
+  if (g_target_options.power != NULL) {
+	 if (strcmp (g_target_options.power,"off") == 0) {
+		dap_vendor_extension_target_power_action (0);
+	 } else if (strcmp (g_target_options.power,"on") == 0) {
+		dap_vendor_extension_target_power_action (1);
+	 } else if (strcmp (g_target_options.power,"status") == 0) {
+		uint8_t status = dap_vendor_extension_target_power_status ();
+		message("target power is %s\n",status ? "on" : "off");
+	 } else {
+		 message ("invalid power option %s",g_target_options.power);
+	 }
+    disconnect_debugger();
+    return 0;
+  }
+
   if (g_target_options.reset > 0)
   {
     verbose("Resetting...");

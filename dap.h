@@ -108,6 +108,8 @@ int dap_jtag_scan_chain(uint32_t *idcode, int size);
 // ex
 uint8_t dap_vendor_extension_get_selected_swd_port (void);
 void dap_vendor_extension_set_selected_swd_port (uint8_t);
+void dap_vendor_extension_target_power_action (bool);
+uint8_t dap_vendor_extension_target_power_status (void);
 
 #endif // _DAP_H_
 
