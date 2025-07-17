@@ -537,8 +537,8 @@ int main(int argc, char **argv)
   }
 
   if (NULL == g_target) {
-	 if (!(g_target_options.get_port || g_target_options.set_port)) {
-		error_exit("no target type specified (use '-t' option)");
+	 if (!(g_target_options.get_port || (g_target_options.set_port != -1))) {
+		error_exit ("no target type specified (use '-t' option)");
 	 }
   } else {
     if (0 == strcmp(g_target, "list"))
