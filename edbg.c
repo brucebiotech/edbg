@@ -537,7 +537,12 @@ int main(int argc, char **argv)
   }
 
   if (NULL == g_target) {
-	 if (!(g_target_options.get_port || (g_target_options.set_port != -1))) {
+	// these options do not need a target
+	 if (!(
+				g_target_options.get_port 
+			|| (g_target_options.set_port != -1)
+			|| (g_target_options.power != NULL)
+	)) {
 		error_exit ("no target type specified (use '-t' option)");
 	 }
   } else {
